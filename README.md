@@ -21,16 +21,21 @@ Aggregated metric data is accumulated in-memory and then vacuumed and sent to Cl
 The client creating functions below take these optional keys as arguments:
 
 :credentials AWSCredentials
+
 :provider AWSCredentialsProvider
+
 :config ClientConfiguration
 
 ```clojure
 (def my-sync-client (apollo/create-cw-client))
 (def my-async-client (apollo/create-async-cw-client))
+;; or
+(def my-sync-client (apollo/create-cw-client :credentials AWSCredentials :config ClientConfiguration))
+(def my-sync-client (apollo/create-cw-client :provider AWSCredentialsProvider ...))
 ```
 ### Get a metric recorder and record a metric
 
-Metric recording takes place in the context of a namespace and dimensions. You can call the `apollo.core/record!` function directly, supplying your own namespace string and dimension map as the first two of the arguments or get a recording function returned by `apollo.core/get-context-recorder` which takes a namespace string and dimension map and returns a function wrapped in the namespace and dimensions which can then be called with the metric-name, a value, unit, and optional additional namespace and/or dimension extensions.
+Metric recording takes place in the context of a namespace and dimensions. You can call the `apollo.core/record!` function directly, supplying your own namespace string and dimension map as the first two of the arguments, or get a recording function returned by `apollo.core/get-context-recorder` which takes a namespace string and dimension map and returns a function wrapped in the namespace and dimensions which can then be called with the metric-name, a value, unit, and optional additional namespace and/or dimension extensions.
 
 #### Example
 
@@ -46,8 +51,12 @@ Metric recording takes place in the context of a namespace and dimensions. You c
 
 ;; or
 
-(ns-metric-recorder "requests" 1 :Count :dimensions {:additional :dimensions})
-(ns-metric-recorder "errors" 1 :Count :namespace "get-thing") ;; passing the optional ns extension will reset dimensions to an empty map.
+(ns-metric-recorder "requests" 1 :Count :dimensions {:endpoint :endpoint-name})
+(ns-metric-recorder "errors" 1 :Count :namespace "errors") ;; passing the optional ns extension will reset dimensions to an empty map.
+
+;; calling record! directly
+
+(apollo/record! "my.namespace.string" {:endpoint "endpoint-name"} "requests" 1 :Count)
 
 ```
 There are also the following helper functions for simple increment and decrement recording operations:
@@ -55,11 +64,17 @@ There are also the following helper functions for simple increment and decrement
 `(apollo.core/get-context-inc-recorder namespace dimensions)`
 `(apollo.core/get-context-dec-recorder namespace dimensions)`
 
-The functions returned by there functions only need to be called with the metric name to increment or decrement.
+The functions returned by these functions only need to be called with the metric name to increment or decrement.
+
+_The dimensions map in the above examples can be an empty map._
+
+### Enable system metric recording
+
+Simply call `apollo.core/enable-sys-metrics!` with a namespace prefix string as it's only argument. 
 
 ### Starting the scheduled vacuum of Metrics
 
-A scheduled executor will vacuum the in-memory collection of aggreagted metrics and send then to Cloudwatch with on the provided schedule.
+A scheduled executor will vacuum the in-memory collection of aggregated metrics and send them to Cloudwatch on the provided schedule.
 
 Get a ScheduledExecutor:
 `(apollo.core/create-vacuum-scheduler)`
@@ -73,7 +88,7 @@ Stop the scheduler:
 
 ### Apollo Component
 
-For convenience, the `apollo.component` ns provides an implementation of Stuart Sierra's Lifecycle component. Use it directly or as a reference when creating your own. The component will create the Cloudwatch client, & schedule and manage the vacumming of metrics. To work it requires a map of the following form be passed in when creating a new instance:
+For convenience, the `apollo.component` ns provides an implementation of Stuart Sierra's Lifecycle component. Use it directly or as a reference when creating your own. The component will create the Cloudwatch client, & schedule and manage the vacumming of metrics. To work it requires a map of the following form to be passed in when creating a new instance:
 
 
 ```clojure
@@ -89,16 +104,16 @@ For convenience, the `apollo.component` ns provides an implementation of Stuart 
                       :interval 1}}}
 ```
 
-The create client and scheduler instances are accessed via the `client` and `scheduler` properties of the started component.
+The created client and scheduler instances are accessed via the `client` and `scheduler` properties of the started component.
 
 
 ## TODO:
 
-Make this documentation better.
+Make this documentation better and add some docstrings!
 
 ## License
 
-Copyright © 2015 FIXME
+Copyright © 2015 Promotably
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
