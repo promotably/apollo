@@ -94,12 +94,13 @@ For convenience, the `apollo.component` ns provides an implementation of Stuart 
 ```clojure
 {:apollo {:sys {:enable? true ;; enables system metric collection
                 :ns-prefix "my-app"}
-          ;; all of the below are optional
+          ;; all of the client options below are optional
           :client {:credentials AWSCredentials
                    :provider AWSCredentialsProvider
                    :config ClientConfiguration
                    ;; or :async
                    :type :sync}
+          ;; scheduler config is NOT optional
           :scheduler {:delay 1
                       :interval 1}}}
 ```
