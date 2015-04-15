@@ -48,6 +48,7 @@
 
 (defn vacuum!
   [client]
+  (log/info "Vacuuming metrics...")
   (let [collection (collector/vacuum!)
         datum-map (collection->datum-map collection)]
     (reduce-kv (fn [acc namespace datum-coll]
@@ -58,6 +59,7 @@
 
 (defn record!
   [namespace dimensions metric-name value unit]
+  (log/debug (format "Recording metric %s for %s: %s %s %s" metric-name namespace dimensions value unit))
   (collector/ingest! {:ns namespace
                       :dimensions dimensions
                       :metric (name metric-name)
@@ -114,9 +116,11 @@
       (record! namespace* dimensions* metric-name -1.0 :Count))))
 
 (defn stop-vacuum-scheduler! [^ScheduledExecutorService scheduler]
+  (log/info "Vacuum scheduler shutting down.")
   (.shutdownNow scheduler))
 
 (defn start-vacuum-scheduler! [delay-secs interval-secs ^ScheduledExecutorService scheduler client]
+  (log/info "Starting vacuum scheduler.")
   (.scheduleWithFixedDelay
    scheduler
    #(vacuum! client)
