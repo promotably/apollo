@@ -116,11 +116,11 @@
 (defn stop-vacuum-scheduler! [^ScheduledExecutorService scheduler]
   (.shutdownNow scheduler))
 
-(defn start-vacuum-scheduler! [delay-mins interval-mins ^ScheduledExecutorService scheduler client]
+(defn start-vacuum-scheduler! [delay-secs interval-secs ^ScheduledExecutorService scheduler client]
   (.scheduleWithFixedDelay
    scheduler
    #(vacuum! client)
-   delay-mins interval-mins TimeUnit/MINUTES))
+   delay-secs interval-secs TimeUnit/SECONDS))
 
 (defn create-vacuum-scheduler []
   (Executors/newSingleThreadScheduledExecutor))

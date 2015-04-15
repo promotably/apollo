@@ -80,7 +80,7 @@ Get a ScheduledExecutor:
 `(apollo.core/create-vacuum-scheduler)`
 
 Start the scheduler:
-`(apollo.core/start-vacuum-scheduler! delay-mins interval-mins scheduler client)`
+`(apollo.core/start-vacuum-scheduler! delay-secs interval-secs scheduler client)`
 "client" is your Cloudwatch client...
 
 Stop the scheduler:
@@ -101,8 +101,8 @@ For convenience, the `apollo.component` ns provides an implementation of Stuart 
                    ;; or :async
                    :type :sync}
           ;; scheduler config is NOT optional
-          :scheduler {:delay 1
-                      :interval 1}}}
+          :scheduler {:delay 30
+                      :interval 30}}}
 ```
 
 The created client and scheduler instances are accessed via the `client` and `scheduler` properties of the started component.
