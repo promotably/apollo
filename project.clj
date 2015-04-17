@@ -1,4 +1,4 @@
-(defproject org.clojars.promotably/apollo "0.2.3"
+(defproject org.clojars.promotably/apollo "0.2.4"
   :description "A clojure library for Amazon Cloudwatch"
   :url "http://github.com/promotably/apollo"
   :license {:name "Eclipse Public License"
