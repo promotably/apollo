@@ -46,20 +46,20 @@
 (defn- client-type
   [client]
   (cond
-   (instance? AmazonCloudWatchAsyncClient client) :async
-   (instance? AmazonCloudWatchClient client) :sync))
+   (instance? com.amazonaws.services.cloudwatch.AmazonCloudWatchAsyncClient client) :async
+   (instance? com.amazonaws.services.cloudwatch.AmazonCloudWatchClient client) :sync))
 
 (defmulti put-metric-data
   (fn [client request]
     (client-type client)))
 
 (defmethod put-metric-data :async
-  [client request]
+  [^AmazonCloudWatchAsyncClient client  ^PutMetricDataRequest request]
   @(.putMetricDataAsync client request)
   (get-req-id-from-response-meta client request))
 
 (defmethod put-metric-data :sync
-  [client request]
+  [^AmazonCloudWatchClient client  ^PutMetricDataRequest request]
   (.putMetricData client request)
   (get-req-id-from-response-meta client request))
 

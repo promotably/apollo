@@ -46,16 +46,33 @@
                                                    (dim-stats->datums dim-stats))))
              {} collection))
 
+(defn- build-and-record!
+  [client collection]
+  (try
+    (let [datum-map (collection->datum-map collection)]
+      (reduce-kv (fn [acc namespace datum-coll]
+                   (let [cleaned-ns (st/replace namespace #"^\." "")
+                         results (map #(to-cloudwatch cleaned-ns % client) datum-coll)]
+                     (into [] (concat acc results))))
+                 [] datum-map))
+    (catch com.amazonaws.AmazonClientException ae
+      (if (.isRetryable ae)
+        (do (log/warn (format "Amazon Cloudwatch Client exception encountered; is retryable. Sleeping 5 seconds before retry. %s"ae))
+            (Thread/sleep 5000)
+            (build-and-record! client collection))
+        (log/error (.getMessage ae))))
+    (catch Exception e
+      (log/error "Error recording metrics to Cloudwatch!")
+      (log/error (.getMessage e)))
+    (catch clojure.lang.ExceptionInfo ex
+      (log/error "Error recording metrics to Cloudwatch!")
+      (log/error (ex-data ex)))))
+
 (defn vacuum!
   [client]
   (log/debug "Vacuuming metrics...")
-  (let [collection (collector/vacuum!)
-        datum-map (collection->datum-map collection)]
-    (reduce-kv (fn [acc namespace datum-coll]
-                 (let [cleaned-ns (st/replace namespace #"^\." "")
-                       results (map #(to-cloudwatch cleaned-ns % client) datum-coll)]
-                   (into [] (concat acc results))))
-               [] datum-map)))
+  (let [collection (collector/vacuum!)]
+    (build-and-record! client collection)))
 
 (defn record!
   [namespace dimensions metric-name value unit]
